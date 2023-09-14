@@ -1,0 +1,4 @@
+repository "BoomeTest@into-flame@cloud.cn"
+  path "/"
+    br "/main"
+    co "/main"
