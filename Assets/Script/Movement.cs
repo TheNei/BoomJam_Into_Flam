@@ -24,18 +24,20 @@ public class Movement : MonoBehaviour
         { MoveCommand.JUMP, Vector3.up * 2},
         {MoveCommand.Stay,Vector3.zero },
         {MoveCommand.Excute,Vector3.zero }
-    };
-
-
+    };  
     public Tilemap cellMap;
     private float cellsize = 2.0f;
     private Vector3Int currentCell;
     private Vector3 targetPos;
     private MoveCommand currentMoveCommand;
     private List<MoveCommand> moveLists = new List<MoveCommand>();
-
+    private TileFlag isFlag;
     [Header("Button")]
     public Button[] inputBtns = new Button[7];
+    private void Awake()
+    {
+        isFlag = GameObject.FindObjectOfType<TileFlag>();
+    }
     private void Start()
     {
         BoundsInt bounds = cellMap.cellBounds;
@@ -55,7 +57,7 @@ public class Movement : MonoBehaviour
   /*      GetInput();*/
         
     }
-    void PlayerMovement()
+    IEnumerator PlayerMovement()
     {
         foreach(MoveCommand command in moveLists)
         {
@@ -63,22 +65,37 @@ public class Movement : MonoBehaviour
             targetPos = transform.position + Values[command];
             if (cellMap.HasTile(cellMap.WorldToCell(targetPos)))
             {
+                if(!isFlag.IsFlags(cellMap.WorldToCell(targetPos)))
+                {
+                    GameManager.Instance.ShowDebug("It is not Interactable");
+                    GameManager.Instance.roundScore--;
+                    yield return new WaitForSeconds(1.5f);
+                    GameManager.Instance.HideDebug();
+                   
+                }
                 transform.position = targetPos;
-                currentMoveCommand = MoveCommand.Stay;
+                isFlag.SetCellFlag(cellMap.WorldToCell(currentCell));
+                GameManager.Instance.roundScore++;
+                yield return new WaitForSeconds(1.0f);
             }
             else
             {
-                Debug.Log("tile is not Exits");
+                GameManager.Instance.roundScore--;
+                GameManager.Instance.ShowDebug("It is not Interactable");
+                yield return new WaitForSeconds(1.5f);
+                GameManager.Instance.HideDebug();
             }
         }
         moveLists.Clear();
+        yield return null;
      
     }
     void AddMoveCommand(MoveCommand command)
     {
         if (moveLists.Count == 3 && command == (MoveCommand)7)
         {
-            PlayerMovement();
+            GameManager.Instance.gameRound++;
+            StartCoroutine(PlayerMovement());
             return;
         }
         else if (moveLists.Count == 3)
@@ -91,6 +108,5 @@ public class Movement : MonoBehaviour
     {
         currentMoveCommand = (MoveCommand)index;
         AddMoveCommand(currentMoveCommand);
-        Debug.Log(currentMoveCommand);
     }
 }
