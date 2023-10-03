@@ -6,13 +6,15 @@ using UnityEngine.UI;
 using TMPro;
 public class Command : MonoBehaviour, IDragHandler, IEndDragHandler
 {
-    
+    private int index = 0;
     public Canvas canvas;//Canvas Component
     private RectTransform rect;
     private Vector2 lastPos;
-    public TMP_InputField textBox;
+
+    public CommandManager.MoveCommand command;
     void Start()
     {
+        canvas = GameObject.FindGameObjectWithTag("MoveUI").GetComponent<Canvas>(); 
         rect = GetComponent<RectTransform>();
         lastPos = rect.anchoredPosition;
     }
@@ -20,35 +22,32 @@ public class Command : MonoBehaviour, IDragHandler, IEndDragHandler
     {
         rect.anchoredPosition += eventData.delta / canvas.scaleFactor;
     }
+   
     void IEndDragHandler.OnEndDrag(PointerEventData eventData)
     {
-        if (RectTransformUtility.RectangleContainsScreenPoint(textBox.GetComponent<RectTransform>(), Input.mousePosition))
-        {
-            Debug.Log("LastPos");
-            
-            Destroy(this.gameObject);
+        List<Image> tempBox = CommandManager.Instance.imageBox;
+        if (tempBox.Count == 0)
             return;
-        }
-            rect.anchoredPosition = lastPos;
-
-    }
-
-  /*  public void OnPointerEnter(PointerEventData eventData)
-    {
-        if (eventData.pointerEnter.gameObject.CompareTag("CommandLine"))
+        /*print(tempBox.Count);*/
+        foreach (Image image in tempBox)
         {
-            Debug.Log("LastPos");
-            Destroy(this.gameObject);
+            if (RectTransformUtility.RectangleContainsScreenPoint(image.GetComponent<RectTransform>(), Input.mousePosition))
+            {
+                int temp = tempBox.IndexOf(image);
+                print("it's useful");
+                CommandManager.Instance.GetInput(command, temp);
+                rect.anchoredPosition = lastPos;
+                break;
+            }
+            else
+            {
+                rect.anchoredPosition = lastPos;
+            }
         }
-    }*/
+        rect.anchoredPosition = lastPos;
+        return;
+      
+    }
 }
-    /*   private void OnTriggerEnter2D(Collider2D collision)
-       {
-           if(collision.gameObject.CompareTag("CommandLine"))
-           {
-               Debug.Log(lastPos);
-               Destroy(this.gameObject);
 
-           }
-       }*/
 

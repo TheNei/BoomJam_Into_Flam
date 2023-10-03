@@ -1,4 +1,3 @@
-repository "BoomeTest@into-flame@cloud.cn"
+rep "BoomeTest@into-flame@cloud.cn"
   path "/"
-    br "/main"
-    co "/main"
+    smartbranch "/main" changeset "34"          

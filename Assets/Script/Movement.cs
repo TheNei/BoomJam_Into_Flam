@@ -5,7 +5,7 @@ using UnityEngine.Tilemaps;
 using UnityEngine.UI;
 public class Movement : MonoBehaviour
 {
-    public enum MoveCommand
+  /*  public enum MoveCommand
     {
         UP = 1,
         DOWN = 2,
@@ -24,16 +24,24 @@ public class Movement : MonoBehaviour
         { MoveCommand.JUMP, Vector3.up * 2},
         {MoveCommand.Stay,Vector3.zero },
         {MoveCommand.Excute,Vector3.zero }
+    };
+    [SerializeField]
+    private Tilemap cellMap;
+    private float cellsize = 2.0f;
     };  
     public Tilemap cellMap;
     private float cellsize = 2.0f;
+    };  */
+    public Tilemap cellMap;
+   /* private float cellsize = 2.0f;*/
     private Vector3Int currentCell;
     private Vector3 targetPos;
-    private MoveCommand currentMoveCommand;
-    private List<MoveCommand> moveLists = new List<MoveCommand>();
+  /*  private MoveCommand currentMoveCommand;*/
+/*    private List<CommandManager.MoveCommand> moveLists = new List<CommandManager.MoveCommand>();*/
     private TileFlag isFlag;
-    [Header("Button")]
-    public Button[] inputBtns = new Button[7];
+    public float speed = 1.0f;
+    public float delay = 0.5f;
+    /*    public Button[] inputBtns = new Button[7];*/
     private void Awake()
     {
         isFlag = GameObject.FindObjectOfType<TileFlag>();
@@ -41,72 +49,70 @@ public class Movement : MonoBehaviour
     private void Start()
     {
         BoundsInt bounds = cellMap.cellBounds;
-        currentMoveCommand = MoveCommand.Stay;
-        for(int i = 0; i< inputBtns.Length;i++)
-        {
-            int temp = i;
-            inputBtns[i].onClick.AddListener(delegate
-            {
-                GetInput(temp + 1);
-            });
-
-        }
     }
     private void Update()
     {
   /*      GetInput();*/
         
     }
-    IEnumerator PlayerMovement()
+    public IEnumerator PlayerMovement(Vector3 target)
     {
-        foreach(MoveCommand command in moveLists)
-        {
+        /*List<CommandManager.MoveCommand> tempList = list;
+        foreach (CommandManager.MoveCommand command in list)
+        {*/
             currentCell = cellMap.WorldToCell(transform.position);
-            targetPos = transform.position + Values[command];
-            if (cellMap.HasTile(cellMap.WorldToCell(targetPos)))
-            {
-                if(!isFlag.IsFlags(cellMap.WorldToCell(targetPos)))
+            targetPos = transform.position +target ;
+        if (cellMap.HasTile(cellMap.WorldToCell(targetPos)))
+        {
+            
+       
+            
+                if (isFlag.IsFlags(cellMap.WorldToCell(targetPos)))
                 {
+                   isFlag.SetCellFlag(cellMap.WorldToCell(targetPos),cellMap.WorldToCell(currentCell));
                     GameManager.Instance.ShowDebug("It is not Interactable");
                     GameManager.Instance.roundScore--;
-                    yield return new WaitForSeconds(1.5f);
-                    GameManager.Instance.HideDebug();
-                   
+                float startTime = Time.time;
+                float journeyLength = Vector3.Distance(transform.position, targetPos);
+                while (transform.position != targetPos)
+                {
+                    float distCovered = (Time.time - startTime) * speed;
+                    float fractionOfJourney = distCovered / journeyLength;
+                    transform.position = Vector3.Lerp(transform.position, targetPos, fractionOfJourney);
+                    yield return null;
                 }
-                transform.position = targetPos;
-                isFlag.SetCellFlag(cellMap.WorldToCell(currentCell));
-                GameManager.Instance.roundScore++;
-                yield return new WaitForSeconds(1.0f);
+                yield return new WaitForSeconds(1.5f);
+                    GameManager.Instance.HideDebug();
+               
+
+            } 
+                else
+                {
+                 isFlag.SetCellFlag(cellMap.WorldToCell(targetPos),cellMap.WorldToCell(currentCell));
+                 GameManager.Instance.roundScore++;
+                float startTime = Time.time;
+                float journeyLength = Vector3.Distance(transform.position, targetPos);
+                while (transform.position != targetPos)
+                {
+                    float distCovered = (Time.time - startTime) * speed;
+                    float fractionOfJourney = distCovered / journeyLength;
+                    transform.position = Vector3.Lerp(transform.position, targetPos, fractionOfJourney);
+                    yield return null;
+                }
+                yield return new WaitForSeconds(delay);
+             
             }
-            else
-            {
+
+        }
+         else{
                 GameManager.Instance.roundScore--;
                 GameManager.Instance.ShowDebug("It is not Interactable");
-                yield return new WaitForSeconds(1.5f);
+                yield return new WaitForSeconds(0.5f);
                 GameManager.Instance.HideDebug();
             }
-        }
-        moveLists.Clear();
+
         yield return null;
      
     }
-    void AddMoveCommand(MoveCommand command)
-    {
-        if (moveLists.Count == 3 && command == (MoveCommand)7)
-        {
-            GameManager.Instance.gameRound++;
-            StartCoroutine(PlayerMovement());
-            return;
-        }
-        else if (moveLists.Count == 3)
-        {
-            return;
-        }
-        moveLists.Add(command);
-    }
-    void GetInput(int index)
-    {
-        currentMoveCommand = (MoveCommand)index;
-        AddMoveCommand(currentMoveCommand);
-    }
+
 }
