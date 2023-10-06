@@ -6,17 +6,18 @@ using UnityEngine.UI;
 using TMPro;
 public class Command : MonoBehaviour, IDragHandler, IEndDragHandler
 {
-    private int index = 0;
+ /*   private int index = 0;*/
     public Canvas canvas;//Canvas Component
     private RectTransform rect;
     private Vector2 lastPos;
-
+    public Image commandImage;
     public CommandManager.MoveCommand command;
     void Start()
     {
         canvas = GameObject.FindGameObjectWithTag("MoveUI").GetComponent<Canvas>(); 
         rect = GetComponent<RectTransform>();
         lastPos = rect.anchoredPosition;
+        commandImage = this.GetComponent<Image>();
     }
     public void OnDrag(PointerEventData eventData)
     {
@@ -25,23 +26,27 @@ public class Command : MonoBehaviour, IDragHandler, IEndDragHandler
    
     void IEndDragHandler.OnEndDrag(PointerEventData eventData)
     {
-        List<Image> tempBox = CommandManager.Instance.imageBox;
+        List<Image> tempBox = CommandManager.Instance.commandBox;
         if (tempBox.Count == 0)
             return;
-        /*print(tempBox.Count);*/
+
+        Vector2 localMousePosition;
         foreach (Image image in tempBox)
         {
-            if (RectTransformUtility.RectangleContainsScreenPoint(image.GetComponent<RectTransform>(), Input.mousePosition))
+            RectTransform rectTransform = image.GetComponent<RectTransform>();
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(rectTransform, Input.mousePosition, Camera.main, out localMousePosition);
+            if (rectTransform.rect.Contains(localMousePosition))
             {
                 int temp = tempBox.IndexOf(image);
-                print("it's useful");
-                CommandManager.Instance.GetInput(command, temp);
+                print("sucess");
+                CommandManager.Instance.GetInput(command, temp,commandImage.sprite);
                 rect.anchoredPosition = lastPos;
                 break;
             }
             else
             {
                 rect.anchoredPosition = lastPos;
+                print("falure");
             }
         }
         rect.anchoredPosition = lastPos;

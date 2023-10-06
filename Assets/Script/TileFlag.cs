@@ -12,13 +12,13 @@ public class TileFlag : MonoBehaviour
     {
         tilemap = GetComponent<Tilemap>();
     }
-    public void SetCellFlag(Vector3Int targetPos,Vector3Int currentPos)
+    public void SetCellFlag(Vector3Int targetPos, Vector3Int currentPos)
     {
         Vector3Int distance = (targetPos - currentPos) / 2;
         if (tilemap.HasTile(currentPos))
         {
             tilemap.SetTileFlags(targetPos, TileFlags.LockTransform);
-            tilemap.SetTile(currentPos, blackTile);
+            tilemap.SetTile(targetPos, blackTile);
         }
         else
         {
@@ -34,7 +34,22 @@ public class TileFlag : MonoBehaviour
         {
             print("mid's not");
         }
-       
+
+    }
+    public void SetCellFlag(Vector3Int currentPos)
+    {
+
+        if (tilemap.HasTile(currentPos))
+        {
+            tilemap.SetTile(currentPos, blackTile);
+            tilemap.SetTileFlags(currentPos, TileFlags.LockTransform);
+           
+        }
+        else
+        {
+            print("it's not");
+        }
+
     }
     public bool IsFlags(Vector3Int targetPos)
     {

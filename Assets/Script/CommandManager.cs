@@ -31,8 +31,6 @@ public class CommandManager : MonoBehaviour
         {MoveCommand.Stay,Vector3.zero },
         {MoveCommand.Excute,Vector3.zero }
     };
-    public DrawLine line;
-    private Backtrack back;
     private static CommandManager instance;
     private CommandManager() { }
     public static CommandManager Instance
@@ -64,50 +62,44 @@ public class CommandManager : MonoBehaviour
     }
     #region
     [Header("MoveBtn")]
-    public List<Command> childBtns = new List<Command>();
-    public List<Enhance> enhanceBtns = new List<Enhance>();
+   /* public List<Command> childBtns = new List<Command>();*/
+   
 
-    public List<Image> imageBox = new List<Image>();
+    public List<Image> commandBox = new List<Image>();
     public List<Image> enhanceBox = new List<Image>();
     public GameObject commandLine;
     public GameObject enhanceLine;
     private Movement player;
-    public bool isExcute;
+    /*    public bool isExcute;*/
+    public float delay = 0.8f;
     private List<MoveCommand> commandLists = new List<MoveCommand>();
-    private List<TextMeshProUGUI> textLists = new List<TextMeshProUGUI>();
-    private List<TextMeshProUGUI> enhanceLists = new List<TextMeshProUGUI>();
-    private Button excute;
+    private List<Enhance> enhanceBtns = new List<Enhance>();
+    public Button excute;
+    Quaternion targetRot;
+    Quaternion defaultRot;
     #endregion
     private void Start()
     {
-        back = GameObject.FindAnyObjectByType<Backtrack>().GetComponent<Backtrack>();
+        targetRot = Quaternion.Euler(0f, 0f, 0f);
+        defaultRot = Quaternion.Euler(0f, 0f, 45f);
         player = GameObject.FindGameObjectWithTag("Player").GetComponent<Movement>();
         excute = GameObject.Find("Excute").GetComponent<Button>();
-        excute.onClick.AddListener(() => { GetInput(MoveCommand.Excute, 0); });
+        excute.onClick.AddListener(() => { GetInput(MoveCommand.Excute, 0,excute.GetComponent<Image>().sprite); });
         for (int i = 0; i < commandLine.transform.childCount; i++)
         {
             int temp = i;
-            textLists.Add(commandLine.transform.GetChild(temp).GetComponentInChildren<TextMeshProUGUI>());
-            imageBox.Add(commandLine.transform.GetChild(temp).GetComponent<Image>());
-            if (textLists == null)
-                print("NULL");
-            if (imageBox == null)
+            commandBox.Add(commandLine.transform.GetChild(temp).GetComponent<Image>());
+          
+            if (commandBox == null)
                 print("image is null");
-            if (textLists[temp].text != string.Empty)
-                textLists[temp].text = string.Empty;
+     
         }
         for (int i = 0; i < enhanceLine.transform.childCount; i++)
         {
             int temp = i;
-            enhanceLists.Add(enhanceLine.transform.GetChild(temp).GetComponentInChildren<TextMeshProUGUI>());
+      
             enhanceBox.Add(enhanceLine.transform.GetChild(temp).GetComponent<Image>());
-            if (enhanceLists.Count == 0)
-            {
-                print("NULL");
-                break;
-            }
-            if (enhanceLists[temp].text != string.Empty)
-                enhanceLists[temp].text = string.Empty;
+          
         }
         for(int i = 0;i < 3;i++)
         {
@@ -121,21 +113,19 @@ public class CommandManager : MonoBehaviour
         for (int i = 0; i < 3; i++)
         {
             enhanceBtns[i] = Enhance.Default;
+            enhanceBox[i].sprite = null;
+          /*  enhanceBox[i].transform.rotation = defaultRot;*/
+            commandBox[i].sprite = null;
+            commandBox[i].transform.rotation = defaultRot;
         }
-        foreach (var text in textLists)
-        {
-            text.text = string.Empty;
-        }
-        foreach (var text in enhanceLists)
-        {
-            text.text = string.Empty;
-        }
+
+       
     }
-    public void GetInput(MoveCommand command, int index)
+    public void GetInput(MoveCommand command, int index, Sprite sprite)
     {
         if (command == (MoveCommand)7 && commandLists.Count == 3)
         {
-            isExcute = true;
+      
             GameManager.Instance.gameRound++;
             StartCoroutine(Excute());
             return;
@@ -148,21 +138,8 @@ public class CommandManager : MonoBehaviour
         if (command != (MoveCommand)7 && commandLists.Count < 3)
         {
             commandLists.Add(command);
-            line.SetNewPosition(GetPosition(index));
-            while (true)
-            {
-                if (textLists[index].text == string.Empty)
-                {
-                    textLists[index].text = command.ToString();
-
-                    break;
-                }
-                else
-                {
-                    print("It's not null");
-                    break;
-                }
-            }
+            commandBox[index].sprite = sprite;
+            commandBox[index].transform.rotation = targetRot;
         }
 
     }
@@ -207,28 +184,20 @@ public class CommandManager : MonoBehaviour
         return Vector3.zero;
     }
 
-    public void GetEnhance(Enhance enhance, int index)
+    public void GetEnhance(Enhance enhance, int index,Sprite sprite)
     {
 
        if (enhanceBtns[index] == Enhance.Default)
         {
             enhanceBtns[index] = enhance;
-            line.SetNewPosition(GetPosition(index));
+    /*        enhanceBox[index].transform.rotation = targetRot;*/
+            enhanceBox[index].sprite = sprite;
         }
-
-        while (true)
+       else
         {
-            if (enhanceLists[index].text == string.Empty)
-            {
-                enhanceLists[index].text = enhance.ToString();
-                break;
-            }
-            else
-            {
-                print("enhance is not null");
-                break;
-            }
+            print("it's full");
         }
+       
     }
     IEnumerator Excute()
     {
@@ -240,49 +209,48 @@ public class CommandManager : MonoBehaviour
         for (int i = 0; i < commandLists.Count; i++)
         {
             int temp = i;
-            
+
             if (enhanceBtns[temp] == Enhance.Default)
             {
-                print(temp);
-                back.SetList(Values[commandLists[temp]], temp);
+                
                 StartCoroutine(player.PlayerMovement(Values[commandLists[temp]]));
-                yield return new WaitForSeconds(1.0f);
+                yield return new WaitForSeconds(delay);
                 continue;
             }
-            if (commandLists[temp] != MoveCommand.JUMP)
-            {
-                if (enhanceBtns[temp] == Enhance.Force)
+                if (commandLists[temp] != MoveCommand.JUMP)
                 {
-                    back.SetList(Values[commandLists[temp]], temp);
-                    StartCoroutine(player.PlayerMovement((Values[commandLists[temp]] * 2.0f)));
-                    yield return new WaitForSeconds(1.0f);
-                }
+                    if (enhanceBtns[temp] == Enhance.Force)
+                    {
+                  
+                        StartCoroutine(player.PlayerJumpMovement((Values[commandLists[temp]] * 2.0f)));
+                        yield return new WaitForSeconds(delay);
+                    }
 
-                if (enhanceBtns[temp] == Enhance.Anti)
-                {
-                    back.SetList(Values[commandLists[temp]], temp);
-                    StartCoroutine(player.PlayerMovement((Values[commandLists[temp]] * -1.0f)));
-                    yield return new WaitForSeconds(1.0f);
-                }
-            }
-            else
-            {
-                if (enhanceBtns[temp] == Enhance.Force)
-                {
-                    back.SetList(Values[commandLists[temp]], temp);
-                    StartCoroutine(player.PlayerMovement((Values[commandLists[temp]] + Vector3.up)));
-                    yield return new WaitForSeconds(1.0f);
-                }
-                
-                if (enhanceBtns[temp] == Enhance.Anti)
-                {
-                    back.SetList(Values[commandLists[temp]], temp);
-                    StartCoroutine(player.PlayerMovement((Values[commandLists[temp]] * -1.0f)));
-                    yield return new WaitForSeconds(1.0f);
-                }
+                    if (enhanceBtns[temp] == Enhance.Anti)
+                    {
                     
-            }
+                        StartCoroutine(player.PlayerMovement((Values[commandLists[temp]] * -1.0f)));
+                        yield return new WaitForSeconds(delay);
+                    }
+                }
+                else
+                {
+                    if (enhanceBtns[temp] == Enhance.Force)
+                    {
+              
+                        StartCoroutine(player.PlayerMovement((Values[commandLists[temp]] + Vector3.up)));
+                        yield return new WaitForSeconds(delay);
+                    }
 
+                    if (enhanceBtns[temp] == Enhance.Anti)
+                    {
+               
+                        StartCoroutine(player.PlayerMovement((Values[commandLists[temp]] * -1.0f)));
+                        yield return new WaitForSeconds(delay);
+                    }
+
+                
+            }
         }
         ClearCommand();
 

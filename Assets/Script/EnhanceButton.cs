@@ -9,11 +9,13 @@ public class EnhanceButton : MonoBehaviour,IDragHandler,IEndDragHandler
     public Canvas canvas;
     private RectTransform rect;
     private Vector2 lastPos;
+    public Image enhanceImage;
     private void Start()
     {
         canvas = GameObject.FindGameObjectWithTag("MoveUI").GetComponent<Canvas>();
         rect = GetComponent<RectTransform>();
         lastPos = rect.anchoredPosition;
+        enhanceImage = this.GetComponent<Image>();
     }
     public void OnDrag(UnityEngine.EventSystems.PointerEventData eventData)
     {
@@ -22,26 +24,27 @@ public class EnhanceButton : MonoBehaviour,IDragHandler,IEndDragHandler
 
     public void OnEndDrag(UnityEngine.EventSystems.PointerEventData eventData)
     {
-    /*    print("Test");*/
         List<Image> tempList = CommandManager.Instance.enhanceBox;
         if (tempList.Count == 0)
         {
-          /*  print("The temp is null");*/
             return;
         }
+        Vector2 localMousePosition;
         foreach (var list in tempList)
         {
-            if (RectTransformUtility.RectangleContainsScreenPoint(list.GetComponent<RectTransform>(),Input.mousePosition))
+            RectTransform rectTransform = list.GetComponent<RectTransform>();
+            RectTransformUtility.ScreenPointToLocalPointInRectangle( rectTransform, Input.mousePosition, Camera.main, out localMousePosition);
+            if(rect.rect.Contains(localMousePosition))
             {
                 int temp = tempList.IndexOf(list);
-             /*   print("enhance is Useful");*/
-                CommandManager.Instance.GetEnhance(enhance,temp);
+                CommandManager.Instance.GetEnhance(enhance,temp,enhanceImage.sprite);
                 rect.anchoredPosition = lastPos;
                 break;
             }
             else
             {
                 rect.anchoredPosition = lastPos;
+                print("enhance faliure");
             }
         }
         rect.anchoredPosition = lastPos;

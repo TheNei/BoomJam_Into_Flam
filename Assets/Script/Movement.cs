@@ -40,7 +40,7 @@ public class Movement : MonoBehaviour
 /*    private List<CommandManager.MoveCommand> moveLists = new List<CommandManager.MoveCommand>();*/
     private TileFlag isFlag;
     public float speed = 1.0f;
-    public float delay = 0.5f;
+    public float delay = 0.8f;
     /*    public Button[] inputBtns = new Button[7];*/
     private void Awake()
     {
@@ -48,6 +48,7 @@ public class Movement : MonoBehaviour
     }
     private void Start()
     {
+        
         BoundsInt bounds = cellMap.cellBounds;
     }
     private void Update()
@@ -57,20 +58,16 @@ public class Movement : MonoBehaviour
     }
     public IEnumerator PlayerMovement(Vector3 target)
     {
-        /*List<CommandManager.MoveCommand> tempList = list;
-        foreach (CommandManager.MoveCommand command in list)
-        {*/
-            currentCell = cellMap.WorldToCell(transform.position);
-            targetPos = transform.position +target ;
+
+        currentCell = cellMap.WorldToCell(transform.position);
+        targetPos = transform.position +target ;
         if (cellMap.HasTile(cellMap.WorldToCell(targetPos)))
         {
-            
-       
-            
+
                 if (isFlag.IsFlags(cellMap.WorldToCell(targetPos)))
                 {
-                   isFlag.SetCellFlag(cellMap.WorldToCell(targetPos),cellMap.WorldToCell(currentCell));
-                    GameManager.Instance.ShowDebug("It is not Interactable");
+                isFlag.SetCellFlag(currentCell);
+                GameManager.Instance.ShowDebug("It is Black");
                     GameManager.Instance.roundScore--;
                 float startTime = Time.time;
                 float journeyLength = Vector3.Distance(transform.position, targetPos);
@@ -81,15 +78,16 @@ public class Movement : MonoBehaviour
                     transform.position = Vector3.Lerp(transform.position, targetPos, fractionOfJourney);
                     yield return null;
                 }
-                yield return new WaitForSeconds(1.5f);
+             
+                yield return new WaitForSeconds(delay);
                     GameManager.Instance.HideDebug();
                
 
-            } 
-                else
-                {
-                 isFlag.SetCellFlag(cellMap.WorldToCell(targetPos),cellMap.WorldToCell(currentCell));
-                 GameManager.Instance.roundScore++;
+            }
+            else
+            {
+                isFlag.SetCellFlag(currentCell);
+                GameManager.Instance.roundScore++;
                 float startTime = Time.time;
                 float journeyLength = Vector3.Distance(transform.position, targetPos);
                 while (transform.position != targetPos)
@@ -99,6 +97,8 @@ public class Movement : MonoBehaviour
                     transform.position = Vector3.Lerp(transform.position, targetPos, fractionOfJourney);
                     yield return null;
                 }
+
+               
                 yield return new WaitForSeconds(delay);
              
             }
@@ -114,5 +114,65 @@ public class Movement : MonoBehaviour
         yield return null;
      
     }
+    public IEnumerator PlayerJumpMovement(Vector3 target)
+    {
 
+        currentCell = cellMap.WorldToCell(transform.position);
+        targetPos = transform.position + target;
+        if (cellMap.HasTile(cellMap.WorldToCell(targetPos)))
+        {
+
+            if (isFlag.IsFlags(cellMap.WorldToCell(targetPos)))
+            {
+                isFlag.SetCellFlag(cellMap.WorldToCell(targetPos),currentCell);
+                isFlag.SetCellFlag(currentCell);
+                GameManager.Instance.ShowDebug("It is Black");
+                GameManager.Instance.roundScore--;
+                float startTime = Time.time;
+                float journeyLength = Vector3.Distance(transform.position, targetPos);
+                while (transform.position != targetPos)
+                {
+                    float distCovered = (Time.time - startTime) * speed;
+                    float fractionOfJourney = distCovered / journeyLength;
+                    transform.position = Vector3.Lerp(transform.position, targetPos, fractionOfJourney);
+                    yield return null;
+                }
+               
+                yield return new WaitForSeconds(delay);
+                GameManager.Instance.HideDebug();
+
+
+            }
+            else
+            {
+                isFlag.SetCellFlag(cellMap.WorldToCell(targetPos),currentCell);
+                isFlag.SetCellFlag(currentCell);
+                GameManager.Instance.roundScore++;
+                float startTime = Time.time;
+                float journeyLength = Vector3.Distance(transform.position, targetPos);
+                while (transform.position != targetPos)
+                {
+                    float distCovered = (Time.time - startTime) * speed;
+                    float fractionOfJourney = distCovered / journeyLength;
+                    transform.position = Vector3.Lerp(transform.position, targetPos, fractionOfJourney);
+                    yield return null;
+                }
+
+                
+                yield return new WaitForSeconds(0.5f);
+
+            }
+
+        }
+        else
+        {
+            GameManager.Instance.roundScore--;
+            GameManager.Instance.ShowDebug("It is not Interactable");
+            yield return new WaitForSeconds(0.5f);
+            GameManager.Instance.HideDebug();
+        }
+
+        yield return null;
+
+    }
 }

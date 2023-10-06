@@ -67,7 +67,7 @@ public class GameManager : MonoBehaviour
     {
         get
         {
-            if (gameRound <= targetRound && roundScore >= roundScore)
+            if (gameRound <= targetRound)
             {
                 return true;
             }
