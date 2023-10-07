@@ -38,7 +38,7 @@ public class Command : MonoBehaviour, IDragHandler, IEndDragHandler
             if (rectTransform.rect.Contains(localMousePosition))
             {
                 int temp = tempBox.IndexOf(image);
-                print("sucess");
+               /* print("sucess");*/
                 CommandManager.Instance.GetInput(command, temp,commandImage.sprite);
                 rect.anchoredPosition = lastPos;
                 break;
@@ -46,7 +46,7 @@ public class Command : MonoBehaviour, IDragHandler, IEndDragHandler
             else
             {
                 rect.anchoredPosition = lastPos;
-                print("falure");
+               /* print("falure");*/
             }
         }
         rect.anchoredPosition = lastPos;

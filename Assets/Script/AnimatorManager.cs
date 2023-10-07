@@ -42,4 +42,5 @@ public class AnimatorManager : MonoBehaviour
         chapterCharacterImage[0].gameObject.SetActive(true);
         characterAnim.SetTrigger("characterMove");
     }
+
 }

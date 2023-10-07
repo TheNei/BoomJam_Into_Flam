@@ -70,6 +70,7 @@ public class CommandManager : MonoBehaviour
     public GameObject commandLine;
     public GameObject enhanceLine;
     private Movement player;
+    private SpawnTile spawner;
     /*    public bool isExcute;*/
     public float delay = 0.8f;
     private List<MoveCommand> commandLists = new List<MoveCommand>();
@@ -80,6 +81,7 @@ public class CommandManager : MonoBehaviour
     #endregion
     private void Start()
     {
+        spawner = GameObject.FindAnyObjectByType<UnityEngine.Tilemaps.Tilemap>().GetComponent<SpawnTile>();
         targetRot = Quaternion.Euler(0f, 0f, 0f);
         defaultRot = Quaternion.Euler(0f, 0f, 45f);
         player = GameObject.FindGameObjectWithTag("Player").GetComponent<Movement>();
@@ -127,6 +129,7 @@ public class CommandManager : MonoBehaviour
         {
       
             GameManager.Instance.gameRound++;
+            spawner.Move();
             StartCoroutine(Excute());
             return;
         }

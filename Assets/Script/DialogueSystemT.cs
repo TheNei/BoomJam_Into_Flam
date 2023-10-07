@@ -6,6 +6,8 @@ using System;
 using System.Text.RegularExpressions;
 using UnityEngine.UI;
 using UnityEngine.U2D;
+using static Unity.VisualScripting.FlowStateWidget;
+using Unity.Burst.Intrinsics;
 
 public class DialogueSystemT : MonoBehaviour
 {
@@ -27,15 +29,16 @@ public class DialogueSystemT : MonoBehaviour
     public TMP_Text narrationText;
     public TMP_Text chapterPlayerText;
     public TMP_Text chapterNPC_Text;
+    public TMP_Text npcDescribeText;
     public GameObject playerDialogBox;
     public GameObject npcDialogBox;
     public GameObject narrationDialogBox;
     public GameObject chapterPlayerDialogBox;
     public GameObject chapterNPC_DialogBox;
+    public GameObject npcDescribeDialogBox;
 
-    [Header("剧情文本")]
-    public TextAsset textFile;
-    private int index;
+    TextAsset textFile;
+    public int index;
 
     [Header("角色图片UI及列表")]
     public Image playerImage;
@@ -45,11 +48,18 @@ public class DialogueSystemT : MonoBehaviour
     [Header("跳转界面")]
     public Image[] Panel;
 
+    [Header("关卡对象")]
+    public GameObject[] levelObject;
+
     Dictionary<string,Sprite> imageDic = new Dictionary<string,Sprite>();
     public Animator anim;
     bool textFinished;
     public bool isDialogue;
     string[] fileData;
+    List<string> eventList = new List<string>();
+    public float autoTime;
+    GameObject chapterPanel;
+
 
     private void Awake()
     {
@@ -65,9 +75,16 @@ public class DialogueSystemT : MonoBehaviour
     }
     void Start()
     {
+        foreach (var item in Panel)
+        {
+            item.gameObject.SetActive(false);
+        }
+        SetLevelPanel(false);
         SetDialogueBox(false, false);
         textFinished = true;
-        ReadTextFile(textFile);
+        autoTime = 0;
+        index = 1;
+        chapterPanel = GameObject.FindGameObjectWithTag("chapter");
     }
 
     void Update()
@@ -84,49 +101,73 @@ public class DialogueSystemT : MonoBehaviour
             index = 1;
             return;
         }
-
-        if (Input.GetKeyDown(KeyCode.Space) && textFinished == false)
+        if (Input.GetKeyDown(KeyCode.Space) && !textFinished)
         {
             waitTime = 0.01f;
             return;
         }
-        if (Input.GetKeyDown(KeyCode.Space) && textFinished == true)
+        if (Input.GetKeyDown(KeyCode.Space) && textFinished)
         {
+            if (GameManager.Instance.isWin)
+            {
+                isDialogue = true;
+            }
             waitTime = 0.1f;
             DilogueLoading();
         }
 
+        if (textFinished)
+        {
+            autoTime += Time.deltaTime;
+            if (autoTime >= 1.8f)
+            {
+                waitTime = 0.1f;
+                DilogueLoading();
+                if(npcDescribeDialogBox.active)
+                    npcDescribeDialogBox.SetActive(false);
+            }
+        }
     }
 
     public void ReadTextFile(TextAsset file)
     {
-        index = 1;
         fileData = file.text.Split('\n');
     }
     public void DilogueLoading()
     {
-        if(fileData != null && isDialogue == true)
+        autoTime = 0;
+        if (fileData != null && isDialogue == true)
         {
             for (int i = 1; i < fileData.Length; i++)
             {
                 if (i == index)
                 {
                     string[] line = fileData[i].Split(",");
-                    if (line[0] == "END")  
+                    if (line[0] == "END")
                     {
                         SetDialogueBox(false, false);
-                        SetchapterDialogueBox(false, false, false);
+                        SetchapterDialogueBox(false, false, false);                       
+                        eventList.Clear();
                         isDialogue = false;
-                        if (line[3] != "\r")
-                            OpenPanel(line[3]);                    
                     }
-                    if (line[0] != "旁白")
+                    if (line[0] == "形象描写")
+                    {
+                        eventList.Add(line[2]);
+                        index++;
+                        DilogueLoading();
+                        break; 
+                    }
+                    if (line[0] != "旁白" && line[0] != "幕间")
                     {
                         UpdateImage(line[0], line[1]);
                     }
                     if (line[2]!= "")
                     {
                         GetCharacter(int.Parse(line[1]), line[2]);
+                    }
+                    if (line[3] != "\r")
+                    {
+                         OpenPanel(line[3]);
                     }
                     index++;
                     break;
@@ -135,7 +176,7 @@ public class DialogueSystemT : MonoBehaviour
             }
         }
     }
-    public void UpdateImage(string name,string position)
+    void UpdateImage(string name,string position)
     {
         if (position.Equals("0"))
         {
@@ -147,7 +188,7 @@ public class DialogueSystemT : MonoBehaviour
         }
     }
 
-    public void GetCharacter(int position,string content)
+    void GetCharacter(int position,string content)
     {
         switch (position)
         {
@@ -173,6 +214,21 @@ public class DialogueSystemT : MonoBehaviour
                 SetchapterDialogueBox(false, false, true);
                 StartCoroutine(SetText(content, chapterNPC_Text));
                 break;
+            case 6:
+                StartCoroutine(InterludeDialogue.Instance.InterludeDia(content, InterludeDialogue.Instance.InterludeDialogueText[position-6]));
+                break;
+            case 7:
+                StartCoroutine(InterludeDialogue.Instance.InterludeDia(content, InterludeDialogue.Instance.InterludeDialogueText[position-6]));
+                break;
+            case 8:
+                StartCoroutine(InterludeDialogue.Instance.InterludeDia(content, InterludeDialogue.Instance.InterludeDialogueText[position-6]));
+                break;
+            case 9:
+                StartCoroutine(InterludeDialogue.Instance.InterludeDia(content, InterludeDialogue.Instance.InterludeDialogueText[position-6]));
+                break;
+            case 10:
+                StartCoroutine(InterludeDialogue.Instance.InterludeDia(content, InterludeDialogue.Instance.InterludeDialogueText[position-6]));
+                break;
             default:
                 break;
         }
@@ -180,7 +236,7 @@ public class DialogueSystemT : MonoBehaviour
 
     [Header("文字显示间隔时间")]
     public float waitTime;
-    IEnumerator SetText(string content, TMP_Text DialogText)
+    public IEnumerator SetText(string content, TMP_Text DialogText)
     {
         textFinished = false;
         DialogText.text = null;
@@ -189,8 +245,10 @@ public class DialogueSystemT : MonoBehaviour
             DialogText.text += content[i];
             yield return new WaitForSeconds(waitTime);
         }
+        yield return new WaitForSeconds(0.2f);
         textFinished = true;
     }
+
     void SetDialogueBox(bool player,bool npc)
     {
         playerDialogBox.SetActive(player);
@@ -202,18 +260,67 @@ public class DialogueSystemT : MonoBehaviour
         chapterPlayerDialogBox.SetActive(player);
         chapterNPC_DialogBox.SetActive(npc);
     }
+
     void OpenPanel(string value)
     {
         switch (value)
         {
-            case "0\r":
+            case "1\r":
+                Panel[0].gameObject.SetActive(false);
                 Panel[int.Parse(value)].gameObject.SetActive(true);
                 isDialogue = true;
+                break;
+            case "2\r":
+                if (!isDialogue)
+                {
+                    if (GameManager.Instance.isWin)
+                    {
+                        SetLevelPanel(false);
+                        Panel[1].gameObject.SetActive(false);
+                        Panel[int.Parse(value)].gameObject.SetActive(true);
+                        isDialogue = true;
+                    }
+                }
+                break;
+            case "#\r":
+                if (isDialogue)
+                {
+                    npcDialogBox.gameObject.SetActive(false);
+                    SetLevelPanel(true);
+                    isDialogue = false;
+                }
                 break;
             case "播放\r":
                 AnimatorManager.Instance.StartAnimator();
                 isDialogue = true;
                 break;
+            
         }
+    }
+
+    public void ButtonOnClickEvent()
+    {
+        if(eventList != null && textFinished)
+        {
+            System.Random ran = new System.Random();
+            int n = ran.Next(eventList.Count);
+            npcDescribeDialogBox.SetActive(true);
+            StartCoroutine(SetText(eventList[n], npcDescribeText));
+        }
+        
+    }
+
+    void SetLevelPanel(bool isOpen)
+    {
+        foreach (var item in levelObject)
+        {
+            item.SetActive(isOpen);
+        }
+    }
+
+    public void PlayGameButton(TextAsset file)
+    {
+        Panel[0].gameObject.SetActive(true);
+        ReadTextFile(file);
     }
 }

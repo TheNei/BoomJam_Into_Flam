@@ -18,7 +18,8 @@ public class TileFlag : MonoBehaviour
         if (tilemap.HasTile(currentPos))
         {
             tilemap.SetTileFlags(targetPos, TileFlags.LockTransform);
-            tilemap.SetTile(targetPos, blackTile);
+            if (!IsFlags(currentPos))
+                tilemap.SetTile(targetPos, blackTile);
         }
         else
         {
@@ -28,7 +29,8 @@ public class TileFlag : MonoBehaviour
         if (tilemap.HasTile(currentPos + distance))
         {
             tilemap.SetTileFlags(currentPos + distance, TileFlags.LockTransform);
-            tilemap.SetTile(currentPos + distance, blackTile);
+            if (!IsFlags(currentPos))
+                tilemap.SetTile(currentPos + distance, blackTile);
         }
         else
         {
@@ -42,6 +44,7 @@ public class TileFlag : MonoBehaviour
         if (tilemap.HasTile(currentPos))
         {
             tilemap.SetTile(currentPos, blackTile);
+            if(!IsFlags(currentPos))
             tilemap.SetTileFlags(currentPos, TileFlags.LockTransform);
            
         }
