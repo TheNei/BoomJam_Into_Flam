@@ -21,6 +21,10 @@ public class Command : MonoBehaviour, IDragHandler, IEndDragHandler
     }
     public void OnDrag(PointerEventData eventData)
     {
+        if(command == CommandManager.MoveCommand.Excute)
+        {
+            return;
+        }
         rect.anchoredPosition += eventData.delta / canvas.scaleFactor;
     }
    

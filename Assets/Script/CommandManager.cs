@@ -58,7 +58,7 @@ public class CommandManager : MonoBehaviour
         {
             instance = this;
         }
-        DontDestroyOnLoad(this);
+   
     }
     #region
     [Header("MoveBtn")]
@@ -69,15 +69,16 @@ public class CommandManager : MonoBehaviour
     public List<Image> enhanceBox = new List<Image>();
     public GameObject commandLine;
     public GameObject enhanceLine;
+    public GodWeapons weapon;
     private Movement player;
     private SpawnTile spawner;
-    /*    public bool isExcute;*/
     public float delay = 0.8f;
     private List<MoveCommand> commandLists = new List<MoveCommand>();
     private List<Enhance> enhanceBtns = new List<Enhance>();
     public Button excute;
     Quaternion targetRot;
     Quaternion defaultRot;
+    Vector3 newScale = new Vector3(1.5f, 1.5f, 1.5f);
     #endregion
     private void Start()
     {
@@ -106,18 +107,20 @@ public class CommandManager : MonoBehaviour
         for(int i = 0;i < 3;i++)
         {
             enhanceBtns.Add(Enhance.Default);
+            commandLists.Add(MoveCommand.Stay);
         }
-
+        ClearCommand();
     }
     void ClearCommand()
     {
-        commandLists.Clear();
+       
         for (int i = 0; i < 3; i++)
         {
             enhanceBtns[i] = Enhance.Default;
+            commandLists[i] = MoveCommand.Stay;
             enhanceBox[i].sprite = null;
-          /*  enhanceBox[i].transform.rotation = defaultRot;*/
             commandBox[i].sprite = null;
+            commandBox[i].transform.localScale = Vector3.one;
             commandBox[i].transform.rotation = defaultRot;
         }
 
@@ -125,24 +128,30 @@ public class CommandManager : MonoBehaviour
     }
     public void GetInput(MoveCommand command, int index, Sprite sprite)
     {
-        if (command == (MoveCommand)7 && commandLists.Count == 3)
+        if(commandLists.Count > 3)
         {
-      
+            commandLists.RemoveAt(3);
+        }
+        if (command == (MoveCommand)7 && commandLists[0] != MoveCommand.Stay && commandLists[1] != MoveCommand.Stay && commandLists[ 2] != MoveCommand.Stay)
+        {
+            
             GameManager.Instance.gameRound++;
-            spawner.Move();
+
+            AuidoManager.Instance.PlayButtonClick();
             StartCoroutine(Excute());
             return;
         }
-        else if (command == (MoveCommand)7 && commandLists.Count < 3)
+        else if (command == (MoveCommand)7)
         {
             return;
         }
 
-        if (command != (MoveCommand)7 && commandLists.Count < 3)
+        if (command != MoveCommand.Excute && commandLists[index] == MoveCommand.Stay)
         {
-            commandLists.Add(command);
+            commandLists[index] = command;
             commandBox[index].sprite = sprite;
             commandBox[index].transform.rotation = targetRot;
+            commandBox[index].transform.localScale = newScale;
         }
 
     }
@@ -204,6 +213,10 @@ public class CommandManager : MonoBehaviour
     }
     IEnumerator Excute()
     {
+        if(GameManager.Instance.IsWin)
+        {
+            StopAllCoroutines();
+        }
         if (commandLists.Count == 0)
         {
             print("it doesn't excute");
@@ -211,27 +224,34 @@ public class CommandManager : MonoBehaviour
         }
         for (int i = 0; i < commandLists.Count; i++)
         {
+           
             int temp = i;
-
-            if (enhanceBtns[temp] == Enhance.Default)
+            if(commandLists[temp] == MoveCommand.Stay)
             {
-                
-                StartCoroutine(player.PlayerMovement(Values[commandLists[temp]]));
-                yield return new WaitForSeconds(delay);
                 continue;
             }
+            if (enhanceBtns[temp] == Enhance.Default)
+            {
+
+                StartCoroutine(player.PlayerMovement(Values[commandLists[temp]]));
+                yield return new WaitForSeconds(delay);
+
+                continue;
+            }
+            else
+            {
                 if (commandLists[temp] != MoveCommand.JUMP)
                 {
                     if (enhanceBtns[temp] == Enhance.Force)
                     {
-                  
+
                         StartCoroutine(player.PlayerJumpMovement((Values[commandLists[temp]] * 2.0f)));
                         yield return new WaitForSeconds(delay);
                     }
 
                     if (enhanceBtns[temp] == Enhance.Anti)
                     {
-                    
+
                         StartCoroutine(player.PlayerMovement((Values[commandLists[temp]] * -1.0f)));
                         yield return new WaitForSeconds(delay);
                     }
@@ -240,23 +260,32 @@ public class CommandManager : MonoBehaviour
                 {
                     if (enhanceBtns[temp] == Enhance.Force)
                     {
-              
+
                         StartCoroutine(player.PlayerMovement((Values[commandLists[temp]] + Vector3.up)));
                         yield return new WaitForSeconds(delay);
                     }
 
                     if (enhanceBtns[temp] == Enhance.Anti)
                     {
-               
+
                         StartCoroutine(player.PlayerMovement((Values[commandLists[temp]] * -1.0f)));
                         yield return new WaitForSeconds(delay);
                     }
 
-                
+
+                }
             }
         }
+      
         ClearCommand();
-
+        if (!weapon.isFreeze)
+            spawner.Move();
+        else if (weapon.isFreeze)
+        {
+            print("do nothing");
+            weapon.isFreeze = false;
+        }
+        GameManager.Instance.IFWin();
         yield return null;
     }
 }

@@ -12,24 +12,17 @@ public class DrawLine : MonoBehaviour
         player = GameObject.FindGameObjectWithTag("Player").GetComponent<Movement>();
         line = GetComponent<LineRenderer>();
         prePosition = player.transform.position;
-        line.SetPosition(0, prePosition);
     }
-   public void SetNewPosition(Vector3 currentPos)
+    public void SetNewPosition(Vector3 currentPos, int index)
     {
-        currentPos.z = 0;
-        if (currentPos == Vector3.zero)
-            return;
-        if (currentPos != prePosition)
-        {
+            currentPos.z = 0;
             line.positionCount++;
-            line.SetPosition(line.positionCount- 1, prePosition+currentPos);
-            prePosition = prePosition+currentPos;
-        }
-        else
-        {
-            return;
-        }
-
+            line.SetPosition(line.positionCount- 1, currentPos);
+      
+    }
+    public Vector3 GetLocalPosition(int index)
+    {
+        return line.GetPosition(index);
     }
         
 

@@ -7,6 +7,7 @@ TagManager:
   - MoveUI
   - CommandLine
   - chapter
+  - tutorial
   layers:
   - Default
   - TransparentFX
@@ -14,7 +15,7 @@ TagManager:
   - 
   - Water
   - UI
-  - 
+  - Interlude
   - 
   - 
   - 
@@ -52,4 +53,10 @@ TagManager:
     locked: 0
   - name: Player
     uniqueID: 975366813
+    locked: 0
+  - name: UIback
+    uniqueID: 1164713393
+    locked: 0
+  - name: Interlude
+    uniqueID: 1805024701
     locked: 0

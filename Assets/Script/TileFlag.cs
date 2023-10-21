@@ -8,28 +8,38 @@ public class TileFlag : MonoBehaviour
  /*   private Vector3Int preCell;
     private Vector3Int nextCell;*/
     public Tile blackTile;
+    private TileBase targetTile;
     private void Awake()
     {
         tilemap = GetComponent<Tilemap>();
+    }
+    private void Start()
+    {
+        targetTile = GameManager.Instance.winTile;
     }
     public void SetCellFlag(Vector3Int targetPos, Vector3Int currentPos)
     {
         Vector3Int distance = (targetPos - currentPos) / 2;
         if (tilemap.HasTile(currentPos))
         {
-            tilemap.SetTileFlags(targetPos, TileFlags.LockTransform);
+            tilemap.SetTileFlags(currentPos, TileFlags.LockTransform);
             if (!IsFlags(currentPos))
-                tilemap.SetTile(targetPos, blackTile);
+            {
+                tilemap.SetTile(currentPos, blackTile);
+            }
+          
+                
         }
-        else
-        {
-            print("it's not");
-        }
+    
 
         if (tilemap.HasTile(currentPos + distance))
         {
             tilemap.SetTileFlags(currentPos + distance, TileFlags.LockTransform);
-            if (!IsFlags(currentPos))
+            if (!IsFlags(currentPos) && tilemap.GetTile(currentPos) == targetTile)
+            {
+                print("targetTile");
+            }
+            else
                 tilemap.SetTile(currentPos + distance, blackTile);
         }
         else
@@ -43,10 +53,18 @@ public class TileFlag : MonoBehaviour
 
         if (tilemap.HasTile(currentPos))
         {
-            tilemap.SetTile(currentPos, blackTile);
-            if(!IsFlags(currentPos))
-            tilemap.SetTileFlags(currentPos, TileFlags.LockTransform);
-           
+            if (!IsFlags(currentPos) && tilemap.GetTile(currentPos) == targetTile)
+            {
+                print("targetTile");
+            }
+            else
+            {
+                tilemap.SetTile(currentPos, blackTile);
+                tilemap.SetTileFlags(currentPos, TileFlags.LockTransform);
+            }
+               
+            
+
         }
         else
         {

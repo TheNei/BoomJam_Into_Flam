@@ -33,6 +33,7 @@ public class Movement : MonoBehaviour
     private float cellsize = 2.0f;
     };  */
     public Tilemap cellMap;
+    public GodWeapons weapon;
    /* private float cellsize = 2.0f;*/
     private Vector3Int currentCell;
     private Vector3 targetPos;
@@ -41,6 +42,7 @@ public class Movement : MonoBehaviour
     private TileFlag isFlag;
     public float speed = 1.0f;
     public float delay = 0.8f;
+    private int flyIndex = 3;
     /*    public Button[] inputBtns = new Button[7];*/
     private void Awake()
     {
@@ -48,8 +50,10 @@ public class Movement : MonoBehaviour
     }
     private void Start()
     {
-        
-        BoundsInt bounds = cellMap.cellBounds;
+        flyIndex = 3;
+        weapon = GameObject.FindAnyObjectByType<GodWeapons>();
+        cellMap = GameObject.FindAnyObjectByType<Tilemap>();
+      
     }
     private void Update()
     {
@@ -58,19 +62,38 @@ public class Movement : MonoBehaviour
     }
     public IEnumerator PlayerMovement(Vector3 target)
     {
-
+       if(GameManager.Instance.IsWin)
+        {
+            StopAllCoroutines();
+        }
         currentCell = cellMap.WorldToCell(transform.position);
         targetPos = transform.position +target ;
         if (cellMap.HasTile(cellMap.WorldToCell(targetPos)))
         {
-
-                if (isFlag.IsFlags(cellMap.WorldToCell(targetPos)))
+           
+            if (isFlag.IsFlags(cellMap.WorldToCell(targetPos)))
                 {
-                isFlag.SetCellFlag(currentCell);
-                GameManager.Instance.ShowDebug("It is Black");
+
+                GameManager.Instance.ShowDebug("踩到黑格子扣1分");
+                if (weapon.isFly && flyIndex>0)
+                {
+                    print("Score do nothing");
+                    flyIndex--;
+                }
+                else
+                {
+                    if(!isFlag.IsFlags(currentCell))
                     GameManager.Instance.roundScore--;
+                    isFlag.SetCellFlag(currentCell);
+                }
+                if (flyIndex == 0)
+                {
+                    weapon.isFly = false;
+                    flyIndex = 3;
+                }
                 float startTime = Time.time;
                 float journeyLength = Vector3.Distance(transform.position, targetPos);
+                AuidoManager.Instance.PlayPlayerMove();
                 while (transform.position != targetPos)
                 {
                     float distCovered = (Time.time - startTime) * speed;
@@ -78,7 +101,7 @@ public class Movement : MonoBehaviour
                     transform.position = Vector3.Lerp(transform.position, targetPos, fractionOfJourney);
                     yield return null;
                 }
-             
+                GameManager.Instance.IFWin();
                 yield return new WaitForSeconds(delay);
                     GameManager.Instance.HideDebug();
                
@@ -86,10 +109,27 @@ public class Movement : MonoBehaviour
             }
             else
             {
-                isFlag.SetCellFlag(currentCell);
-                GameManager.Instance.roundScore++;
+
+                
+                if (weapon.isFly && flyIndex > 0)
+                {
+                    print("Score do nothing");
+                    flyIndex--;
+                }
+                else
+                {
+                    isFlag.SetCellFlag(currentCell);
+                    GameManager.Instance.roundScore++;
+                }
+                if (flyIndex == 0)
+                {
+                    weapon.isFly = false;
+                    flyIndex = 3;
+                    
+                }
                 float startTime = Time.time;
                 float journeyLength = Vector3.Distance(transform.position, targetPos);
+                AuidoManager.Instance.PlayPlayerMove();
                 while (transform.position != targetPos)
                 {
                     float distCovered = (Time.time - startTime) * speed;
@@ -98,7 +138,7 @@ public class Movement : MonoBehaviour
                     yield return null;
                 }
 
-               
+                GameManager.Instance.IFWin();
                 yield return new WaitForSeconds(delay);
              
             }
@@ -106,13 +146,11 @@ public class Movement : MonoBehaviour
         }
          else{
                 GameManager.Instance.roundScore--;
-                GameManager.Instance.ShowDebug("It is not Interactable");
+                GameManager.Instance.ShowDebug("越界扣1分");
                 yield return new WaitForSeconds(0.5f);
                 GameManager.Instance.HideDebug();
-            }
-
-        yield return null;
-     
+            yield return null;
+        }
     }
     public IEnumerator PlayerJumpMovement(Vector3 target)
     {
@@ -124,12 +162,29 @@ public class Movement : MonoBehaviour
 
             if (isFlag.IsFlags(cellMap.WorldToCell(targetPos)))
             {
-                isFlag.SetCellFlag(cellMap.WorldToCell(targetPos),currentCell);
-                isFlag.SetCellFlag(currentCell);
-                GameManager.Instance.ShowDebug("It is Black");
-                GameManager.Instance.roundScore--;
+               
+                
+                GameManager.Instance.ShowDebug("踩到黑格子扣1分");
+                if (weapon.isFly && flyIndex > 0)
+                {
+                    print("Score do nothing");
+                    flyIndex--;
+                }
+                else
+                {
+                    isFlag.SetCellFlag(cellMap.WorldToCell(targetPos), currentCell);
+                    isFlag.SetCellFlag(currentCell);
+                    GameManager.Instance.roundScore--;
+                }
+                if (flyIndex == 0)
+                {
+                    weapon.isFly = false;
+                    flyIndex = 3;
+                    
+                }
                 float startTime = Time.time;
                 float journeyLength = Vector3.Distance(transform.position, targetPos);
+                AuidoManager.Instance.PlayPlayerMove();
                 while (transform.position != targetPos)
                 {
                     float distCovered = (Time.time - startTime) * speed;
@@ -137,19 +192,36 @@ public class Movement : MonoBehaviour
                     transform.position = Vector3.Lerp(transform.position, targetPos, fractionOfJourney);
                     yield return null;
                 }
-               
+                GameManager.Instance.IFWin();
                 yield return new WaitForSeconds(delay);
                 GameManager.Instance.HideDebug();
 
 
             }
+           
             else
             {
-                isFlag.SetCellFlag(cellMap.WorldToCell(targetPos),currentCell);
-                isFlag.SetCellFlag(currentCell);
-                GameManager.Instance.roundScore++;
+            
+                if (weapon.isFly && flyIndex > 0)
+                {
+                    print("Score do nothing");
+                    flyIndex--;
+                }
+                else
+                {
+                    isFlag.SetCellFlag(cellMap.WorldToCell(targetPos), currentCell);
+                    isFlag.SetCellFlag(currentCell);
+                    GameManager.Instance.roundScore++;
+                }
+                if(flyIndex == 0)
+                {
+                    weapon.isFly = false;
+                    flyIndex = 3;
+                        
+                }
                 float startTime = Time.time;
                 float journeyLength = Vector3.Distance(transform.position, targetPos);
+                AuidoManager.Instance.PlayPlayerMove();
                 while (transform.position != targetPos)
                 {
                     float distCovered = (Time.time - startTime) * speed;
@@ -157,8 +229,8 @@ public class Movement : MonoBehaviour
                     transform.position = Vector3.Lerp(transform.position, targetPos, fractionOfJourney);
                     yield return null;
                 }
+                GameManager.Instance.IFWin();
 
-                
                 yield return new WaitForSeconds(0.5f);
 
             }
@@ -167,7 +239,7 @@ public class Movement : MonoBehaviour
         else
         {
             GameManager.Instance.roundScore--;
-            GameManager.Instance.ShowDebug("It is not Interactable");
+            GameManager.Instance.ShowDebug("越界扣1分");
             yield return new WaitForSeconds(0.5f);
             GameManager.Instance.HideDebug();
         }
